@@ -1,2 +1,3 @@
 # iosync
-Nodejs real-time data synchronisation based on fast-json-patch and socket.io
+Is a pure javascript Nodejs module that synchronizes data in real-time between server and different connected clients, it includes “data binding”, “scopes”, “session and login”, “query”, “redirect”, “middlewares”, etc...
+Simply it's all you need to make a real-time management application
