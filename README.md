@@ -127,20 +127,20 @@ HTML ( /public/index.html ) :
 <div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
 
 <pre style="margin: 0; line-height: 125%;background:#000;border-radius: none;border: none;"><span style="color: #555555"><!doctype html></span>
-<span style="color: #cccccc"><html></span>
-	<span style="color: #cccccc"><head></span>
-		<span style="color: #cccccc"><title></span><span style="color: #cccccc">My iosync app</span><span style="color: #cccccc"></title></span>
+<span style="color: #cccccc">&lt;html&gt;</span>
+	<span style="color: #cccccc">&lt;head&gt;</span>
+		<span style="color: #cccccc">&lt;title&gt;</span><span style="color: #cccccc">My iosync app</span><span style="color: #cccccc">&lt;/title&gt;</span>
 
-		<span style="color: #555555"><!-- import iosync requirements --></span>
-		<span style="color: #cccccc"><script src=</span><span style="color: #cd0000">"/socket.io/socket.io.js"</span><span style="color: #cccccc">></script></span>
-		<span style="color: #cccccc"><script src=</span><span style="color: #cd0000">"/json-patch/json-patch-duplex.js"</span><span style="color: #cccccc">></script></span>
-		<span style="color: #cccccc"><script src=</span><span style="color: #cd0000">"/iosync/client.js"</span><span style="color: #cccccc">></script></span>
-		<span style="color: #cccccc"><script src=</span><span style="color: #cd0000">"/app.js"</span><span style="color: #cccccc">></script></span>
-	<span style="color: #cccccc"></head></span>
-	<span style="color: #cccccc"><body></span>
-		<span style="color: #cccccc"><input</span> <span style="color: #cccccc">id=</span><span style="color: #cd0000">"input"</span> <span style="color: #cccccc">></span>
-	<span style="color: #cccccc"></body></span>
-<span style="color: #cccccc"></html></span>
+		<span style="color: #555555">&lt;!-- import iosync requirements --&gt;</span>
+		<span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">"/socket.io/socket.io.js"</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
+		<span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">"/json-patch/json-patch-duplex.js"</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
+		<span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">"/iosync/client.js"</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
+		<span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">"/app.js"</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
+	<span style="color: #cccccc">&lt;/head&gt;</span>
+	<span style="color: #cccccc">&lt;body&gt;</span>
+		<span style="color: #cccccc">&lt;input</span> <span style="color: #cccccc">id=</span><span style="color: #cd0000">"input"</span> <span style="color: #cccccc">&gt;</span>
+	<span style="color: #cccccc">&lt;/body&gt;</span>
+<span style="color: #cccccc">&lt;/html&gt;</span>
 </pre>
 
 </div>
