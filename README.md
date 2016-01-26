@@ -255,7 +255,8 @@ yes
 
 The path to bind
 
-Example:  
+Example:
+
 “/articles/541”
 
 </td>
