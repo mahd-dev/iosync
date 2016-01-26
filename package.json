@@ -1,7 +1,7 @@
 {
   "name": "iosync",
   "version": "0.1.0",
-  "description": "Nodejs module that synchronizes data in real-time between server and different connected clients, it includes “data binding”, “scopes”, “session and login”, “query”, “redirect”, “middlewares”, etc...",
+  "description": "Nodejs module that synchronizes data in real-time between server and different connected clients, it includes “data binding”, “scopes”, “session and login”, “query”, “redirect”, “middlewares”, etc... Full documentation : http://mahdcompany.github.io/iosync/",
   "main": "index.js",
   "dependencies": {
     "express-socket.io-session": "^1.3.1",
