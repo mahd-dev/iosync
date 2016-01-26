@@ -4,9 +4,9 @@ Simply it's all you need to make a real-time management application
 ## Principle :
 
 It's based on client-server architecture so client binds to specific variables names and when that variable was changed then the server the “patch_processor” function to store it and diffuse that change to other binded clients based on it's scope and connected user
-
+![principle-image](http://mahdcompany.github.io/iosync/img/drawing-3.svg)
 Here is an example of scope principle and how variables works virtually, it supposes that there is a json object contains all data on server and every client has a real-time synchronized copy of the server json object.
-
+![principle-example-image](http://mahdcompany.github.io/iosync/img/drawing-2.svg)
 ## Getting started :
 
 ### Installation :
