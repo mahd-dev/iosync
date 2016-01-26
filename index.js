@@ -42,11 +42,11 @@ module.exports = {
               for (var p in paths) {
                 if (paths.hasOwnProperty(p) && paths[p].provider) {
                   for (var c in paths[p].clients) {
-                    if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].id == socket.id) {
+                    if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].client.id == socket.id) {
                       if(paths[p].scope == "user"){
                         paths[p].provider(function (value) {
-                          if(value) paths[p].clients[c].emit("patch", [{op: "replace", path: paths[p].path, value: value}]);
-                          else paths[p].clients[c].emit("patch", [{op: "remove", path: paths[p].path}]);
+                          if(value) paths[p].clients[c].client.emit("patch", [{op: "replace", path: paths[p].path, value: value}]);
+                          else paths[p].clients[c].client.emit("patch", [{op: "remove", path: paths[p].path}]);
                         }, socket.handshake.session);
                       }else if (typeof paths[p].scope == "object" && socket.handshake.session.user.capabilities) {
                         scope_loop: for (var s in paths[p].scope.read) {
@@ -76,9 +76,9 @@ module.exports = {
                                   }
                                   return value;
                                 };
-                                paths[p].clients[c].emit("patch", [{op: "replace", path: paths[p].path, value: validate_scope(paths[p].path, value)}]);
+                                paths[p].clients[c].client.emit("patch", [{op: "replace", path: paths[p].path, value: validate_scope(paths[p].path, value)}]);
                               }
-                              else paths[p].clients[c].emit("patch", [{op: "remove", path: paths[p].path}]);
+                              else paths[p].clients[c].client.emit("patch", [{op: "remove", path: paths[p].path}]);
                             }, socket.handshake.session);
                             break scope_loop;
                           }
@@ -105,8 +105,8 @@ module.exports = {
               for (var p in paths) {
                 if (paths.hasOwnProperty(p) && (paths[p].scope == "user" || typeof paths[p].scope == "object")) {
                   for (var c in paths[p].clients) {
-                    if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].id == socket.id) {
-                      paths[p].clients[c].emit("patch", [{op: "remove", path: paths[p].path}]);
+                    if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].client.id == socket.id) {
+                      paths[p].clients[c].client.emit("patch", [{op: "remove", path: paths[p].path}]);
                     }
                   }
                 }
@@ -114,7 +114,7 @@ module.exports = {
 
             } else client_callback(response);
           });
-        } else client_callback({error: "login_system_is_not_configured"});
+        } else client_callback({error: "logout_system_is_not_configured"});
       });
 
       socket.on("check", function (option, client_callback) {
@@ -133,12 +133,13 @@ module.exports = {
           if (paths.hasOwnProperty(p) && paths[p].path==path) {
             var cl_exist = false;
             clients_loop: for (var s in paths[p].clients) {
-              if (paths[p].clients.hasOwnProperty(s) && paths[p].clients[s].id==socket.id) {
+              if (paths[p].clients.hasOwnProperty(s) && paths[p].clients[s].client.id==socket.id) {
+                paths[p].clients[s].params = params;
                 cl_exist = true;
                 break clients_loop;
               }
             }
-            if(!cl_exist) paths[p].clients.push(socket);
+            if(!cl_exist) paths[p].clients.push({client: socket, params: {}});
 
             var provide = function () {
               if(paths[p].provider) paths[p].provider(function (value) {
@@ -172,7 +173,7 @@ module.exports = {
                 else callback(undefined);
               }, socket.handshake.session, params);
               else callback(undefined);
-            }
+            };
             if(paths[p].scope == "public") provide();
             else if (typeof paths[p].scope == "object" && socket.handshake.session.user && socket.handshake.session.user.capabilities) {
               var priv_exist = false;
@@ -201,7 +202,7 @@ module.exports = {
           scope: undefined,
           provider: undefined,
           patch_processor: undefined,
-          clients: [socket]
+          clients: [{client: socket, params: {}}]
         });
       });
 
@@ -209,7 +210,7 @@ module.exports = {
         for (var p in paths) {
           if (paths.hasOwnProperty(p) && paths[p].path==path) {
             for (var s in paths[p].clients) {
-              if (paths[p].clients.hasOwnProperty(s) && paths[p].clients[s].id==socket.id) {
+              if (paths[p].clients.hasOwnProperty(s) && paths[p].clients[s].client.id==socket.id) {
                 delete paths[p].clients[s];
               }
             }
@@ -226,10 +227,72 @@ module.exports = {
         params = params.params;
         paths_loop: for (var p in paths) {
           if (paths.hasOwnProperty(p) && paths[p].path==path && paths[p].provider) {
-            paths[p].provider(function (value) {
-              if(value) callback([{op: "replace", path: path, value: value}]);
+            var cl_exist = false;
+            clients_loop: for (var s in paths[p].clients) {
+              if (paths[p].clients.hasOwnProperty(s) && paths[p].clients[s].client.id==socket.id) {
+                cl_exist = true;
+                paths[p].clients[s].params = params;
+                break clients_loop;
+              }
+            }
+            if(!cl_exist) {
+              callback(undefined);
+              return;
+            }
+
+            var provide = function () {
+              if(paths[p].provider) paths[p].provider(function (value) {
+                if(value) {
+                  var validate_scope = function (path, value) {
+                    if(!value || !(value.constructor===Object || value.constructor===Array)) return value;
+                    for (var v in value) if (value.hasOwnProperty(v)) {
+                      paths_loop: for (var vsp in paths) if (paths.hasOwnProperty(vsp) && paths[vsp].path==path+"/"+v && typeof paths[vsp].scope == "object") {
+                        if(!socket.handshake.session.user || !socket.handshake.session.user.capabilities) {
+                          delete value[v];
+                          break paths_loop;
+                        }else{
+                          var e=false;
+                          scope_loop: for (var vsc in paths[vsp].scope.read) if (paths[vsp].scope.read.hasOwnProperty(vsc) && socket.handshake.session.user.capabilities.indexOf(paths[vsp].scope.read[vsc])>-1){
+                            e=true;
+                            break scope_loop;
+                          }
+                          if(!e) {
+                            delete value[v];
+                            break paths_loop;
+                          }
+                        }
+                      }
+                      value[v]=validate_scope(path+"/"+v, value[v]);
+                    }
+                    return value;
+                  };
+                  value = validate_scope(path, value);
+                  callback([{op: "replace", path: path, value: value}]);
+                }
+                else callback(undefined);
+              }, socket.handshake.session, params);
               else callback(undefined);
-            }, socket.handshake.session, params);
+            };
+            if(paths[p].scope == "public") provide();
+            else if (typeof paths[p].scope == "object" && socket.handshake.session.user && socket.handshake.session.user.capabilities) {
+              var priv_exist = false;
+              scope_loop: for (var c in paths[p].scope.read) {
+                if (paths[p].scope.read.hasOwnProperty(c) && socket.handshake.session.user.capabilities.indexOf(paths[p].scope.read[c])>-1) {
+                  provide();
+                  priv_exist=true;
+                  break scope_loop;
+                }
+              }
+              if(!priv_exist) callback(undefined);
+            }else if (paths[p].scope == "user" && socket.handshake.session.user) {
+              provide();
+            }else if (paths[p].scope == "session") {
+              if(paths[p].provider) paths[p].provider(function (value) {
+                if(value) callback([{op: "replace", path: path, value: value}]);
+                else callback(undefined);
+              }, socket.handshake.session, params);
+              else callback(undefined);
+            }else callback(undefined);
             break paths_loop;
           }
         }
@@ -239,7 +302,7 @@ module.exports = {
         for (var p in paths) {
           if (paths.hasOwnProperty(p)) {
             for (var s in paths[p].clients) {
-              if (paths[p].clients.hasOwnProperty(s) && paths[p].clients[s].id==socket.id) {
+              if (paths[p].clients.hasOwnProperty(s) && paths[p].clients[s].client.id==socket.id) {
                 delete paths[p].clients[s];
               }
             }
@@ -256,7 +319,13 @@ module.exports = {
     if(def_opt.server) def_opt.server.listen(opt.port || process.env.PORT || 80);
 
     return {
-      bind: function (path, scope, provider, patch_processor) {
+      bind: function (options) {
+        var opt = options || {};
+        var path = opt.path;
+        var scope = opt.scope;
+        var provider = opt.provider;
+        var patch_processor = opt.patch_processor;
+
         var exist = false;
         for (var p in paths) {
           if (paths.hasOwnProperty(p) && paths[p].path==path) {
@@ -271,7 +340,7 @@ module.exports = {
 
                 for (var c in paths[p].clients) {
                   if (paths[p].clients.hasOwnProperty(c)) {
-                    paths[p].clients[c].emit("patch", patches);
+                    paths[p].clients[c].client.emit("patch", patches);
                   }
                 }
 
@@ -283,10 +352,10 @@ module.exports = {
                 else var patches = [{op: "remove", path: path}];
 
                 for (var c in paths[p].clients) {
-                  if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].handshake.session.user && paths[p].clients[c].handshake.session.user.capabilities) {
+                  if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].client.handshake.session.user && paths[p].clients[c].client.handshake.session.user.capabilities) {
                     scope_loop: for (var s in paths[p].scope.read) {
                       if (paths[p].scope.read.hasOwnProperty(s) && socket.handshake.session.user.capabilities.indexOf(paths[p].scope.read[s])>-1) {
-                        paths[p].clients[c].emit("patch", patches);
+                        paths[p].clients[c].client.emit("patch", patches);
                         break scope_loop;
                       }
                     }
@@ -296,21 +365,21 @@ module.exports = {
 
             }else if (paths[p].scope == "user") {
               if(provider) for (var c in paths[p].clients) {
-                if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].handshake.session.user) {
+                if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].client.handshake.session.user) {
                   provider(function (value) {
-                    if(value) paths[p].clients[c].emit("patch", [{op: "replace", path: path, value: value}]);
-                    else paths[p].clients[c].emit("patch", [{op: "remove", path: path}]);
-                  }, paths[p].clients[c].handshake.session);
+                    if(value) paths[p].clients[c].client.emit("patch", [{op: "replace", path: path, value: value}]);
+                    else paths[p].clients[c].client.emit("patch", [{op: "remove", path: path}]);
+                  }, paths[p].clients[c].client.handshake.session);
                 }
               }
 
             }else if (paths[p].scope == "session") {
               if(provider) for (var c in paths[p].clients) {
-                if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].handshake.session.user) {
+                if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].client.handshake.session.user) {
                   provider(function (value) {
-                    if(value) paths[p].clients[c].emit("patch", [{op: "replace", path: path, value: value}]);
-                    else paths[p].clients[c].emit("patch", [{op: "remove", path: path}]);
-                  }, paths[p].clients[c].handshake.session);
+                    if(value) paths[p].clients[c].client.emit("patch", [{op: "replace", path: path, value: value}]);
+                    else paths[p].clients[c].client.emit("patch", [{op: "remove", path: path}]);
+                  }, paths[p].clients[c].client.handshake.session);
                 }
               }
             }
@@ -325,37 +394,34 @@ module.exports = {
           clients: []
         });
       },
-      patch: function (patch, user) {
+      patch: function (options) {
+        var opt = options || {};
+        var patch = opt.patch;
+        var user = opt.user;
+
         apply_patch(patch, user, undefined);
       },
-      watch: function (paths, bind, callback) {
+      watch: function (options) {
+        var opt = options || {};
+        var paths = opt.paths;
+        var bind = opt.bind;
+        var callback = opt.callback;
+
         watchers.push({paths: paths, bind: bind, callback:callback});
       },
-      on: function (event, callback) {
-        switch (event) {
-          case "login":
-            callbacks.login = callback;
-            break;
-          case "logout":
-            callbacks.logout = callback;
-            break;
-          default:
-          throw new unknown_event();
-        }
+      authenticate: function (opt) {
+        var opt = options || {};
+        var login = opt.login;
+        var logout = opt.logout;
+
+        callbacks.login = login;
+        callbacks.logout = logout;
       },
-      off: function (event) {
-        switch (event) {
-          case "login":
-            callbacks.login = undefined;
-            break;
-          case "logout":
-            callbacks.logout = undefined;
-            break;
-          default:
-          throw new unknown_event();
-        }
-      },
-      query: function (url, callback) {
+      query: function (options) {
+        var opt = options || {};
+        var url = opt.url;
+        var callback = opt.callback;
+
         var exist = false;
         for (var c in callbacks.query) {
           if (callbacks.query.hasOwnProperty(c) && callbacks.query[c].url==url) {
@@ -365,10 +431,20 @@ module.exports = {
         }
         if(!exist) callbacks.query.push({url: url, callback: callback});
       },
-      redirect: function (url, params, session, callback) {
+      redirect: function (options) {
+        var opt = options || {};
+        var url = opt.url;
+        var params = opt.params;
+        var session = opt.session;
+        var callback = opt.callback;
+
         run_query(url, params, session, callback);
       },
-      middleware: function (url, callback) {
+      middleware: function (options) {
+        var opt = options || {};
+        var url = opt.url;
+        var callback = opt.callback;
+
         callbacks.middleware.push({
           url: url,
           callback: callback
@@ -379,7 +455,7 @@ module.exports = {
     function apply_patch(patch, user, socket) {
       for (var p in patch) if (patch.hasOwnProperty(p)) {
         for (var path in paths) {
-          if (paths.hasOwnProperty(path) && (patch[p].path.indexOf(paths[path].path)==0 || (patch[p].op=="move" && patch[p].from.indexOf(paths[path].path)==0))) {
+          if (paths.hasOwnProperty(path) && ((patch[p].path && patch[p].path.indexOf(paths[path].path)==0) || (patch[p].op=="move" && patch[p].from.indexOf(paths[path].path)==0))) {
             if(socket){
               if(patch[p].scope=="public" && !paths[path].patch_processor) return;
               else if(typeof paths[p].scope == "object"){
@@ -406,7 +482,7 @@ module.exports = {
                               for (var wpath in paths) {
                                 if (paths.hasOwnProperty(wpath) && paths[wpath].path.indexOf(watchers[w].bind[b])==0 && paths[wpath].clients.length) {
                                   setTimeout(function () {
-                                    watchers[w].callback(patch[p]);
+                                    watchers[w].callback([patch[p]]);
                                   },0);
                                   break watcher_bind_loop;
                                 }
@@ -414,24 +490,24 @@ module.exports = {
                             }
                           }
                         }else setTimeout(function () {
-                          watchers[w].callback(patch[p]);
+                          watchers[w].callback([patch[p]]);
                         },0);
                         break watcher_paths_loop;
                       }
                     }
                   }else setTimeout(function () {
-                    watchers[w].callback(patch[p]);
+                    watchers[w].callback([patch[p]]);
                   },0);
                 }
               }
             }, 0);
 
             if(paths[path].patch_processor) setTimeout(function () {
-              paths[path].patch_processor(patch[p]);
+              paths[path].patch_processor([patch[p]]);
             }, 0);
             if (paths[p].scope != "session") for (var c in paths[path].clients) {
-              if (paths[path].clients.hasOwnProperty(c) && (!socket || paths[path].clients[c].id != socket.id) && ((paths[path].scope != "user") || (paths[path].scope == "user" && paths[path].clients[c].handshake.session.user.id==user.id))) {
-                paths[path].clients[c].emit("patch", [patch[p]]);
+              if (paths[path].clients.hasOwnProperty(c) && (!socket || paths[path].clients[c].client.id != socket.id) && ((paths[path].scope != "user") || (paths[path].scope == "user" && paths[path].clients[c].client.handshake.session.user.id==user.id))) {
+                paths[path].clients[c].client.emit("patch", [patch[p]]);
               }
             }
           }
@@ -453,19 +529,12 @@ module.exports = {
       var i = -1;
       var run_middleware = function () {
         i++;
-        if (callbacks.middleware[i] != undefined) {
-          if (!callbacks.middleware[i].url || url.indexOf(callbacks.middleware[i].url)==0) callbacks.middleware[i].callback(url.substring(url.indexOf(callbacks.middleware[i].url), url.length - callbacks.middleware[i].url.length), params, session, run_middleware, client_callback);
+        if (callbacks.middleware[i]) {
+          if (!callbacks.middleware[i].url || url.indexOf(callbacks.middleware[i].url)==0) callbacks.middleware[i].callback(url, params, session, run_middleware, client_callback);
           else run_middleware();
         } else next(url, params, session, client_callback);
       }
       run_middleware();
-    }
-
-    function unknown_event(){
-      this.message = "Unknown event";
-      this.toString = function () {
-        return this.message;
-      };
     }
 
   }
