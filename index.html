@@ -55,24 +55,70 @@
 
 <p>There is two ways to start it :</p>
 <p>Start it directly :</p>
-<div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%;background:#000;border-radius: none;border: none;"><span style="color: #00cd00">var</span> <span style="color: #cccccc">app</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">iosync();</span></pre></div>
+<div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #555555">// import modules</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">server</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;http&#39;</span><span style="color: #cccccc">);</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">express</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;express&#39;</span><span style="color: #cccccc">);</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">app</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">express();</span>
+<span style="color: #cccccc">server</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">server.Server(app);</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">iosync</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;iosync&#39;</span><span style="color: #cccccc">).iosync;</span>
+
+<span style="color: #555555">// serve client files</span>
+<span style="color: #cccccc">app.use(</span><span style="color: #cd0000">&quot;/&quot;</span><span style="color: #cccccc">,</span> <span style="color: #cccccc">express.</span><span style="color: #cdcd00">static</span><span style="color: #cccccc">(</span><span style="color: #cd0000">&quot;public&quot;</span><span style="color: #cccccc">));</span>
+<span style="color: #cccccc">app.get(</span><span style="color: #cd0000">&quot;/iosync/client.js&quot;</span><span style="color: #cccccc">,</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(req,</span> <span style="color: #cccccc">res)</span> <span style="color: #cccccc">{</span>
+	<span style="color: #cccccc">res.sendFile(__dirname</span> <span style="color: #3399cc">+</span> <span style="color: #cd0000">&quot;/node_modules/iosync/client.js&quot;</span><span style="color: #cccccc">);</span>
+<span style="color: #cccccc">});</span>
+<span style="color: #cccccc">app.get(</span><span style="color: #cd0000">&quot;/json-patch/json-patch-duplex.js&quot;</span><span style="color: #cccccc">,</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(req,</span> <span style="color: #cccccc">res)</span> <span style="color: #cccccc">{</span>
+	<span style="color: #cccccc">res.sendFile(__dirname</span> <span style="color: #3399cc">+</span> <span style="color: #cd0000">&quot;/node_modules/iosync/node_modules/fast-json-patch/dist/json-patch-duplex.min.js&quot;</span><span style="color: #cccccc">);</span>
+<span style="color: #cccccc">});</span>
+
+
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">port</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">process.env.PORT</span> <span style="color: #3399cc">||</span> <span style="color: #cd00cd">3000</span><span style="color: #cccccc">;</span>
+
+<span style="color: #555555">// start iosync</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">iosync_app</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">iosync</span> <span style="color: #cccccc">({</span>
+	<span style="color: #cccccc">server</span> <span style="color: #3399cc">:</span> <span style="color: #cccccc">server,</span>
+	<span style="color: #cccccc">port</span> <span style="color: #3399cc">:</span> <span style="color: #cccccc">port</span>
+<span style="color: #cccccc">});</span>
+
+<span style="color: #555555">// start server</span>
+<span style="color: #cccccc">server.listen(port,</span> <span style="color: #00cd00">function</span><span style="color: #cccccc">(){</span>
+  <span style="color: #cccccc">console.log(</span><span style="color: #cdcd00">new</span> <span style="color: #cd00cd">Date</span><span style="color: #cccccc">().toISOString()</span> <span style="color: #3399cc">+</span> <span style="color: #cd0000">&#39; : Server listening on port &#39;</span> <span style="color: #3399cc">+</span> <span style="color: #cccccc">port);</span>
+<span style="color: #cccccc">});</span>
+
+<span style="color: #555555">// bind &quot;/test&quot; to test variable</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">test</span> <span style="color: #3399cc">=</span> <span style="color: #cd0000">&quot;default value&quot;</span><span style="color: #cccccc">;</span>
+<span style="color: #cccccc">iosync_app.bind({</span>
+	<span style="color: #cccccc">path</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;/test&quot;</span><span style="color: #cccccc">,</span>
+	<span style="color: #cccccc">scope</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;public&quot;</span><span style="color: #cccccc">,</span>
+	<span style="color: #cccccc">provider</span><span style="color: #3399cc">:</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(callback)</span> <span style="color: #cccccc">{</span>
+		<span style="color: #cccccc">callback(test);</span>
+	<span style="color: #cccccc">},</span>
+	<span style="color: #cccccc">patch_processor</span><span style="color: #3399cc">:</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(patch)</span> <span style="color: #cccccc">{</span>
+		<span style="color: #cccccc">test</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">patch.value;</span>
+		<span style="color: #cccccc">console.log(</span><span style="color: #cd0000">&quot;patch received&quot;</span><span style="color: #cccccc">);</span>
+		<span style="color: #cccccc">console.log(patch);</span>
+	<span style="color: #cccccc">}</span>
+<span style="color: #cccccc">});</span>
+</pre></div>
 <p>Or</p>
 <p>Make
-it works with express and mongodb ( it helps you store connected
+it works with mongodb ( it helps you store connected
 clients in the database so server can restart while clients stays
 connected and it's not recommended to store sessions in the RAM ) :</p>
-<div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%;background:#000;border-radius: none;border: none;"><span style="color: #555555">// importing modules</span>
-<span style="color: #00cd00">var</span> <span style="color: #cccccc">express</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;express&#39;</span><span style="color: #cccccc">)();</span>
-<span style="color: #00cd00">var</span> <span style="color: #cccccc">server</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;http&#39;</span><span style="color: #cccccc">)(express);</span>
+<div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #555555">// importing modules</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">server</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;http&#39;</span><span style="color: #cccccc">);</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">express</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;express&#39;</span><span style="color: #cccccc">);</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">app</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">express();</span>
+<span style="color: #cccccc">server</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">server.Server(app);</span>
 <span style="color: #00cd00">var</span> <span style="color: #cccccc">bodyParser</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;body-parser&#39;</span><span style="color: #cccccc">);</span>
 <span style="color: #00cd00">var</span> <span style="color: #cccccc">cookieParser</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;cookie-parser&#39;</span><span style="color: #cccccc">);</span>
 <span style="color: #00cd00">var</span> <span style="color: #cccccc">session</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;express-session&#39;</span><span style="color: #cccccc">);</span>
 <span style="color: #00cd00">var</span> <span style="color: #cccccc">MongoClient</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;mongodb&#39;</span><span style="color: #cccccc">).MongoClient;</span>
 
 <span style="color: #555555">// make express able to read and parse requests headers ( this is useful to access cookies in order to identify sessions )</span>
-<span style="color: #cccccc">express.use(bodyParser.json());</span>
-<span style="color: #cccccc">express.use(bodyParser.urlencoded({</span> <span style="color: #cccccc">extended</span><span style="color: #3399cc">:</span> <span style="color: #cdcd00">true</span> <span style="color: #cccccc">}));</span>
-<span style="color: #cccccc">express.use(cookieParser());</span>
+<span style="color: #cccccc">app.use(bodyParser.json());</span>
+<span style="color: #cccccc">app.use(bodyParser.urlencoded({</span> <span style="color: #cccccc">extended</span><span style="color: #3399cc">:</span> <span style="color: #cdcd00">true</span> <span style="color: #cccccc">}));</span>
+<span style="color: #cccccc">app.use(cookieParser());</span>
 
 <span style="color: #555555">// first we need to make sure the app is connected to database</span>
 <span style="color: #cccccc">MongoClient.connect(</span><span style="color: #cd0000">&#39;mongodb://localhost:27017/my_db&#39;</span><span style="color: #cccccc">,</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(err,</span> <span style="color: #cccccc">mongodb)</span> <span style="color: #cccccc">{</span>
@@ -92,7 +138,7 @@ connected and it's not recommended to store sessions in the RAM ) :</p>
 		<span style="color: #cccccc">secret</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;choose a secret word&quot;</span>
 	<span style="color: #cccccc">});</span>
 
-	<span style="color: #cccccc">express.use(session);</span>
+	<span style="color: #cccccc">app.use(session);</span>
 
 	<span style="color: #555555">// start iosync</span>
 	<span style="color: #00cd00">var</span> <span style="color: #cccccc">app</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">iosync</span> <span style="color: #cccccc">({</span>
@@ -102,13 +148,13 @@ connected and it's not recommended to store sessions in the RAM ) :</p>
 	<span style="color: #cccccc">});</span>
 <span style="color: #cccccc">}</span>
 
-<span style="color: #cccccc">express.get(</span><span style="color: #cd0000">&quot;/iosync/client.js&quot;</span><span style="color: #cccccc">,</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(req,</span> <span style="color: #cccccc">res)</span> <span style="color: #cccccc">{</span>
-	<span style="color: #cccccc">res.sendFile(require.resolve(__dirname</span> <span style="color: #3399cc">+</span> <span style="color: #cd0000">&quot;/iosync/client.js&quot;</span><span style="color: #cccccc">));</span>
+<span style="color: #cccccc">app.get(</span><span style="color: #cd0000">&quot;/iosync/client.js&quot;</span><span style="color: #cccccc">,</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(req,</span> <span style="color: #cccccc">res)</span> <span style="color: #cccccc">{</span>
+	<span style="color: #cccccc">res.sendFile(__dirname</span> <span style="color: #3399cc">+</span> <span style="color: #cd0000">&quot;/node_modules/iosync/client.js&quot;</span><span style="color: #cccccc">);</span>
 <span style="color: #cccccc">});</span>
-<span style="color: #cccccc">express.get(</span><span style="color: #cd0000">&quot;/json-patch/json-patch-duplex.js&quot;</span><span style="color: #cccccc">,</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(req,</span> <span style="color: #cccccc">res)</span> <span style="color: #cccccc">{</span>
-	<span style="color: #cccccc">res.sendFile(require.resolve(__dirname</span> <span style="color: #3399cc">+</span> <span style="color: #cd0000">&quot;/node_modules/iosync/node_modules/fast-json-patch/dist/json-patch-duplex.min.js&quot;</span><span style="color: #cccccc">));</span>
+<span style="color: #cccccc">app.get(</span><span style="color: #cd0000">&quot;/json-patch/json-patch-duplex.js&quot;</span><span style="color: #cccccc">,</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(req,</span> <span style="color: #cccccc">res)</span> <span style="color: #cccccc">{</span>
+	<span style="color: #cccccc">res.sendFile(__dirname</span> <span style="color: #3399cc">+</span> <span style="color: #cd0000">&quot;/node_modules/iosync/node_modules/fast-json-patch/dist/json-patch-duplex.min.js&quot;</span><span style="color: #cccccc">);</span>
 <span style="color: #cccccc">});</span>
-<span style="color: #cccccc">express.use(</span><span style="color: #cd0000">&quot;/&quot;</span><span style="color: #cccccc">,</span> <span style="color: #cccccc">express.</span><span style="color: #cdcd00">static</span><span style="color: #cccccc">(require.resolve(__dirname</span> <span style="color: #3399cc">+</span> <span style="color: #cd0000">&quot;/public&quot;</span><span style="color: #cccccc">)));</span>
+<span style="color: #cccccc">app.use(</span><span style="color: #cd0000">&quot;/&quot;</span><span style="color: #cccccc">,</span> <span style="color: #cccccc">express.</span><span style="color: #cdcd00">static</span><span style="color: #cccccc">(</span><span style="color: #cd0000">&quot;public&quot;</span><span style="color: #cccccc">));</span>
 </pre></div>
 
 <h4>Trying to bind “/test” :</h4>
@@ -116,7 +162,7 @@ connected and it's not recommended to store sessions in the RAM ) :</p>
 <div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%;background:#000;border-radius: none;border: none;"><span style="color: #555555">// we suppose this var is the database</span>
 <span style="color: #00cd00">var</span> <span style="color: #cccccc">test</span> <span style="color: #3399cc">=</span> <span style="color: #cd0000">&quot;default value&quot;</span><span style="color: #cccccc">;</span>
 
-<span style="color: #cccccc">mod.server.iosync.bind({</span>
+<span style="color: #cccccc">iosync.bind({</span>
 	<span style="color: #cccccc">path</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;/test&quot;</span><span style="color: #cccccc">,</span>
 	<span style="color: #cccccc">scope</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;public&quot;</span><span style="color: #cccccc">,</span>
 	<span style="color: #cccccc">provider</span><span style="color: #3399cc">:</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(callback)</span> <span style="color: #cccccc">{</span>
@@ -140,35 +186,35 @@ connected and it's not recommended to store sessions in the RAM ) :</p>
 		<span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">&quot;/socket.io/socket.io.js&quot;</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
 		<span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">&quot;/json-patch/json-patch-duplex.js&quot;</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
 		<span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">&quot;/iosync/client.js&quot;</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
-		<span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">&quot;/app.js&quot;</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
 	<span style="color: #cccccc">&lt;/head&gt;</span>
 	<span style="color: #cccccc">&lt;body&gt;</span>
 		<span style="color: #cccccc">&lt;input</span> <span style="color: #cccccc">id=</span><span style="color: #cd0000">&quot;input&quot;</span> <span style="color: #cccccc">&gt;</span>
+    <span style="color: #cccccc">&lt;script src=</span><span style="color: #cd0000">&quot;/app.js&quot;</span><span style="color: #cccccc">&gt;&lt;/script&gt;</span>
 	<span style="color: #cccccc">&lt;/body&gt;</span>
 <span style="color: #cccccc">&lt;/html&gt;</span>
 </pre></div>
 <p>JavaScript ( /public/app.js ) :</p>
-<div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%;background:#000;border-radius: none;border: none;"><span style="color: #00cd00">var</span> <span style="color: #cccccc">input</span> <span style="color: #3399cc">=</span> <span style="color: #cd00cd">document</span><span style="color: #cccccc">.getElementById(</span><span style="color: #cd0000">&quot;input&quot;</span><span style="color: #cccccc">);</span>
+<div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #cccccc">iosync</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">iosync(</span><span style="color: #cd0000">&quot;ws://&quot;</span> <span style="color: #3399cc">+</span> <span style="color: #cccccc">location.host);</span>
+
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">input</span> <span style="color: #3399cc">=</span> <span style="color: #cd00cd">document</span><span style="color: #cccccc">.getElementById(</span><span style="color: #cd0000">&quot;input&quot;</span><span style="color: #cccccc">);</span>
 
 <span style="color: #cccccc">input.value</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">iosync.bind({</span>
 	<span style="color: #cccccc">path</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;/test&quot;</span><span style="color: #cccccc">,</span>
 	<span style="color: #cccccc">observer</span><span style="color: #3399cc">:</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(value,</span> <span style="color: #cccccc">patches)</span> <span style="color: #cccccc">{</span>
-
 		<span style="color: #555555">// update input&#39;s value</span>
 		<span style="color: #cccccc">input.value</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">value;</span>
-
-		<span style="color: #555555">// make sure it&#39;s visually updated</span>
-		<span style="color: #cccccc">input.change();</span>
 	<span style="color: #cccccc">}</span>
 <span style="color: #cccccc">});</span>
 
-<span style="color: #cccccc">$(</span><span style="color: #cd0000">&quot;#input&quot;</span><span style="color: #cccccc">).keyup(</span><span style="color: #00cd00">function</span><span style="color: #cccccc">()</span> <span style="color: #cccccc">{</span>
-	<span style="color: #cccccc">iosync.patch([{</span>
-		<span style="color: #cccccc">op</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;update&quot;</span><span style="color: #cccccc">,</span>
-		<span style="color: #cccccc">path</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;/test&quot;</span><span style="color: #cccccc">,</span>
-		<span style="color: #cccccc">value</span><span style="color: #3399cc">:</span> <span style="color: #cccccc">input.value</span>
-	<span style="color: #cccccc">}]);</span>
-<span style="color: #cccccc">});</span>
+<span style="color: #cccccc">input.onkeyup</span> <span style="color: #3399cc">=</span> <span style="color: #00cd00">function</span><span style="color: #cccccc">()</span> <span style="color: #cccccc">{</span>
+	<span style="color: #cccccc">iosync.patch({</span>
+		<span style="color: #cccccc">patch</span><span style="color: #3399cc">:</span> <span style="color: #cccccc">[{</span>
+			<span style="color: #cccccc">op</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;replace&quot;</span><span style="color: #cccccc">,</span>
+			<span style="color: #cccccc">path</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;/test&quot;</span><span style="color: #cccccc">,</span>
+			<span style="color: #cccccc">value</span><span style="color: #3399cc">:</span> <span style="color: #cccccc">input.value</span>
+		<span style="color: #cccccc">}]</span>
+	<span style="color: #cccccc">});</span>
+<span style="color: #cccccc">};</span>
 </pre></div>
 <p>That's it !, now start the server</p>
 <div style="background: #000000; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%; color:#fff;background:#000;border-radius: none;border: none;">node app.js</pre></div>
