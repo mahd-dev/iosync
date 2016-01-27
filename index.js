@@ -26,6 +26,7 @@ module.exports = {
 
     io.on("connection", function(socket) {
 
+      if(!socket.handshake.session) socket.handshake.session={};
       if(!socket.handshake.session.data) socket.handshake.session.data={};
 
       socket.on("login", function(login_data, client_callback) {
