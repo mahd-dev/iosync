@@ -13,4 +13,4 @@ Here is an example of scope principle and how variables works virtually, it supp
 
 ![principle-example-image](http://mahdcompany.github.io/iosync/img/drawing-2.svg)
 
-See [Full documentaion](http://mahdcompany.github.io/iosync/) for the Getting started and API
+See [Full documentation](http://mahdcompany.github.io/iosync/) for the Getting started and API
