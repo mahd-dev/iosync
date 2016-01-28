@@ -410,7 +410,7 @@ module.exports = {
 
         watchers.push({paths: paths, bind: bind, callback:callback});
       },
-      authenticate: function (opt) {
+      authenticate: function (options) {
         var opt = options || {};
         var login = opt.login;
         var logout = opt.logout;
