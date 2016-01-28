@@ -5,7 +5,7 @@ Simply it's all you need to make a real-time management application
 
 ## Principle :
 
-It's based on client-server architecture so client binds to specific variables names and when that variable was changed then the server the “patch_processor” function to store it and diffuse that change to other binded clients based on it's scope and connected user
+It's based on client-server architecture so client binds to specific variables names and when that variable was changed then the server store it and bradcast that change to other binded clients based on it's scope and connected user
 
 ![principle-image](http://mahdcompany.github.io/iosync/img/drawing-3.svg)
 
