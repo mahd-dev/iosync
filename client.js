@@ -6,22 +6,27 @@ var iosync = function(url){
   var _observers = [];
 
   jsonpatch.observe(_data, function (patch) {
+		var clean_indexes = [];
+		console.log({
+			patch: patch,
+			_ignone: _ignore
+		});
     for (var p in patch) if (patch.hasOwnProperty(p)) {
       var ign_index = 0;
-      search_loop: while (ign_index < _ignore.length){ // searcing for the patch in _ignore array
-        var diff = jsonpatch.compare(patch[p], _ignore[ign_index]);
-        if(diff.length) for (var i=0; i<diff.length; i++) if (diff[i].path=="/op" && (diff[i].value=="add" || diff[i].value=="replace")) diff.splice(i,1);
-        if(!diff.length) break search_loop;
-        ign_index++;
+      while (ign_index < _ignore.length && (!_ignore[ign_index] || (patch[p].path.indexOf(_ignore[ign_index].path)!=0))){ // searcing for the patch in _ignore array
+				ign_index++;
       }
       if(ign_index==_ignore.length){ // patch not found in _ignore array
         _socket.emit("patch", [patch[p]]);
         trigger_observers([patch[p]], "client");
       }else{
-        _ignore.splice(ign_index, 1);
+				clean_indexes.push(ign_index);
         trigger_observers([patch[p]], "server");
       }
     }
+		clean_indexes.sort(function(a, b) { return a - b; });
+		var i = clean_indexes.length;
+		while(i--) _ignore.splice(clean_indexes[i], 1);
   });
 
   _socket.on('patch', function (patch) {
