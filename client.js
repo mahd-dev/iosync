@@ -1,5 +1,6 @@
 var iosync = function(url){
 
+  "use strict";
   var _socket = io.connect(url || "ws://" + location.host);
   var _data = {};
   var _ignore = [];
@@ -7,13 +8,9 @@ var iosync = function(url){
 
   jsonpatch.observe(_data, function (patch) {
 		var clean_indexes = [];
-		console.log({
-			patch: patch,
-			_ignone: _ignore
-		});
     for (var p in patch) if (patch.hasOwnProperty(p)) {
       var ign_index = 0;
-      while (ign_index < _ignore.length && (!_ignore[ign_index] || (patch[p].path.indexOf(_ignore[ign_index].path)!=0))){ // searcing for the patch in _ignore array
+      while (ign_index < _ignore.length && (!_ignore[ign_index] || (patch[p].path.indexOf(_ignore[ign_index].path)!==0))){ // searcing for the patch in _ignore array
 				ign_index++;
       }
       if(ign_index==_ignore.length){ // patch not found in _ignore array
@@ -30,8 +27,7 @@ var iosync = function(url){
   });
 
   _socket.on('patch', function (patch) {
-    Array.prototype.push.apply(_ignore, patch);
-    jsonpatch.apply(_data, patch);
+    apply_patch(patch, "server");
   });
 
   return{
@@ -56,7 +52,7 @@ var iosync = function(url){
         _socket.emit("bind", {path: path, params: params}, function (patch) { // notify server to provide us lastest value, and upcoming updates
           if(patch) {
             Array.prototype.push.apply(_ignore, patch);
-            jsonpatch.apply(_data, patch);
+            apply_patch(patch, "server");
           }
         });
         return xPath_get(path);
@@ -80,7 +76,7 @@ var iosync = function(url){
       var opt = options || {};
       var patch = opt.patch;
 
-      jsonpatch.apply(_data, patch);
+      apply_patch(patch, "client");
     },
     apply_params: function (options) {
       var opt = options || {};
@@ -123,7 +119,7 @@ var iosync = function(url){
     for (var o in _observers) if (_observers.hasOwnProperty(o)) {
       var patches = [];
       for (var p in patch) {
-        if (patch.hasOwnProperty(p) && ((patch[p].path && patch[p].path.indexOf(_observers[o].path))==0 || (patch[p].op=="move" && patch[p].from.indexOf(_observers[o].path)==0))) { // check if observer is watching this path
+        if (patch.hasOwnProperty(p) && ((patch[p].path && patch[p].path.indexOf(_observers[o].path))===0 || (patch[p].op=="move" && patch[p].from.indexOf(_observers[o].path)===0))) { // check if observer is watching this path
           if(patch[p].path) patch[p].path = patch[p].path.slice(0, _observers[o].path.length);
           if(patch[p].from) patch[p].from = patch[p].from.slice(0, _observers[o].path.length);
           patch[p].source = source;
@@ -138,12 +134,43 @@ var iosync = function(url){
     var keys = path.split("/");
     var val=_data;
     for (var k in keys) {
-      if(keys.hasOwnProperty(k) && keys[k]!=""){ // escape empty keys
+      if(keys.hasOwnProperty(k) && keys[k]!==""){ // escape empty keys
         if(val.hasOwnProperty(keys[k])) val=val[keys[k]]; // okay, jump to that key
         else return undefined; // oups, key does not exists
       }
     }
     return val; // path exists so return it's value
+  }
+  
+  function apply_patch(patch, source) { // we use this to keep reference binding working
+    var val;
+    var new_patch = [];
+    for (var p in patch) {
+      if (patch.hasOwnProperty(p)) {
+        val = xPath_get(patch[p].path);
+        if(patch[p].op == "replace" && val instanceof Object && patch[p].value instanceof Object){
+          for (var r in val) {
+            if (val.hasOwnProperty(r)) {
+              new_patch.push({
+                op:"remove",
+                path: patch[p].path + (patch[p].path[patch[p].path.length-1]=="/"?"":"/") + r.toString()
+              });
+            }
+          }
+          for (var a in patch[p].value) {
+            if (patch[p].value.hasOwnProperty(a)) {
+              new_patch.push({
+                op:"add",
+                path: patch[p].path + (patch[p].path[patch[p].path.length-1]=="/"?"":"/") + a.toString(),
+                value: patch[p].value[a]
+              });
+            }
+          }
+        }else new_patch.push(patch[p]);
+      }
+    }
+    if(source=="server") Array.prototype.push.apply(_ignore, new_patch);
+    jsonpatch.apply(_data, new_patch);
   }
 
 };
