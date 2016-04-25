@@ -9,19 +9,25 @@ var iosync = function(url){
   jsonpatch.observe(_data, function (patch) {
 		var clean_indexes = [];
     for (var p in patch) if (patch.hasOwnProperty(p)) {
+      // searcing for the patch in _ignore array
       var ign_index = 0;
-      while (ign_index < _ignore.length && (!_ignore[ign_index] || (patch[p].path.indexOf(_ignore[ign_index].path)!==0))){ // searcing for the patch in _ignore array
+      var found = 0;
+      while (ign_index < _ignore.length){
+        if(!_ignore[ign_index] || (patch[p].path.indexOf(_ignore[ign_index].path)!==0)){
+          found=1;
+          if(clean_indexes.indexOf(ign_index)<0) clean_indexes.push(ign_index);
+        }
 				ign_index++;
       }
-      if(ign_index==_ignore.length){ // patch not found in _ignore array
+      if(!found){ // patch not found in _ignore array
         _socket.emit("patch", [patch[p]]);
         trigger_observers([patch[p]], "client");
       }else{
-				clean_indexes.push(ign_index);
         trigger_observers([patch[p]], "server");
       }
     }
 		clean_indexes.sort(function(a, b) { return a - b; });
+   
 		var i = clean_indexes.length;
 		while(i--) _ignore.splice(clean_indexes[i], 1);
   });
