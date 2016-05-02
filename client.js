@@ -89,7 +89,9 @@ var iosync = function(url){
       var path = opt.path;
       var params = opt.params;
 
-      _socket.emit("apply_params", {path: path, params: params});
+      _socket.emit("apply_params", {path: path, params: params}, function (patch) {
+        if(patch) apply_patch(patch, "server");
+      });
     },
     login: function (options) {
       var opt = options || {};
