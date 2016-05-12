@@ -1,6 +1,8 @@
 module.exports = {
   iosync: function (opt) {
-    def_opt = {};
+    "use strict";
+    
+    var def_opt = {};
     if(!opt.server){
       def_opt.server = require('http').createServer();
     }
@@ -31,14 +33,14 @@ module.exports = {
 
       socket.on("login", function(login_data, client_callback) {
         if(callbacks.login){
-          var response = callbacks.login(login_data, socket.handshake.session, function (response) {
-            if (!response.error){
+          callbacks.login(login_data, socket.handshake.session, function (err, response) {
+            if (!err){
               socket.handshake.session.user = {
                 id: response.user.id,
                 capabilities: response.user.capabilities
               };
               socket.handshake.session.save();
-              client_callback(response.client_params);
+              client_callback(null, response.client_params);
 
               for (var p in paths) {
                 if (paths.hasOwnProperty(p) && paths[p].provider) {
@@ -90,18 +92,18 @@ module.exports = {
                 }
               }
 
-            }else client_callback(response);
+            }else client_callback(err);
           });
-        } else client_callback({error: "login_system_is_not_configured"});
+        } else client_callback("login_system_is_not_configured");
       });
 
       socket.on("logout", function(data, client_callback) {
         if(callbacks.logout){
-          var response = callbacks.logout(socket.handshake.session, function (response) {
-            if (!response.error){
+          callbacks.logout(socket.handshake.session, function (err, response) {
+            if (!err){
               delete socket.handshake.session.user;
               socket.handshake.session.save();
-              client_callback(response.client_params);
+              client_callback(null, response.client_params);
 
               for (var p in paths) {
                 if (paths.hasOwnProperty(p) && (paths[p].scope == "user" || typeof paths[p].scope == "object")) {
@@ -113,9 +115,9 @@ module.exports = {
                 }
               }
 
-            } else client_callback(response);
+            } else client_callback(err);
           });
-        } else client_callback({error: "logout_system_is_not_configured"});
+        } else client_callback("logout_system_is_not_configured");
       });
 
       socket.on("check", function (option, client_callback) {
@@ -336,8 +338,9 @@ module.exports = {
 
             if(paths[p].scope == "public") {
               if(provider) provider(function (value) {
-                if(value) var patches = [{op: "replace", path: path, value: value}];
-                else var patches = [{op: "remove", path: path}];
+                var patches;
+                if(value) patches = [{op: "replace", path: path, value: value}];
+                else patches = [{op: "remove", path: path}];
 
                 for (var c in paths[p].clients) {
                   if (paths[p].clients.hasOwnProperty(c)) {
@@ -346,22 +349,24 @@ module.exports = {
                 }
 
               });
-            }else if (typeof paths[p].scope == "object" && socket.handshake.session.user && socket.handshake.session.user.capabilities) {
+            }else if (typeof paths[p].scope == "object") {
 
               if(provider) provider(function (value) {
-                if(value) var patches = [{op: "replace", path: path, value: value}];
-                else var patches = [{op: "remove", path: path}];
+                var patches;
+                if(value) patches = [{op: "replace", path: path, value: value}];
+                else patches = [{op: "remove", path: path}];
 
                 for (var c in paths[p].clients) {
                   if (paths[p].clients.hasOwnProperty(c) && paths[p].clients[c].client.handshake.session.user && paths[p].clients[c].client.handshake.session.user.capabilities) {
                     scope_loop: for (var s in paths[p].scope.read) {
-                      if (paths[p].scope.read.hasOwnProperty(s) && socket.handshake.session.user.capabilities.indexOf(paths[p].scope.read[s])>-1) {
+                      if (paths[p].scope.read.hasOwnProperty(s) && paths[p].clients[c].client.handshake.session.user.capabilities.indexOf(paths[p].scope.read[s])>-1) {
                         paths[p].clients[c].client.emit("patch", patches);
                         break scope_loop;
                       }
                     }
                   }
                 }
+                
               });
 
             }else if (paths[p].scope == "user") {
