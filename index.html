@@ -57,7 +57,7 @@
 <span style="color: #00cd00">var</span> <span style="color: #cccccc">express</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;express&#39;</span><span style="color: #cccccc">);</span>
 <span style="color: #00cd00">var</span> <span style="color: #cccccc">app</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">express();</span>
 <span style="color: #cccccc">server</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">server.Server(app);</span>
-<span style="color: #00cd00">var</span> <span style="color: #cccccc">iosync</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;iosync&#39;</span><span style="color: #cccccc">).iosync;</span>
+<span style="color: #00cd00">var</span> <span style="color: #cccccc">iosync</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">require(</span><span style="color: #cd0000">&#39;iosync&#39;</span><span style="color: #cccccc">);</span>
 
 <span style="color: #555555">// serve client files</span>
 <span style="color: #cccccc">app.use(</span><span style="color: #cd0000">&quot;/&quot;</span><span style="color: #cccccc">,</span> <span style="color: #cccccc">express.</span><span style="color: #cdcd00">static</span><span style="color: #cccccc">(</span><span style="color: #cd0000">&quot;public&quot;</span><span style="color: #cccccc">));</span>
@@ -211,7 +211,7 @@ update the other browser input value<br><br>
 <h1>API :</h1>
 <h2>Server side :</h2>
 <h3>bind ( { path, scope,
-provider, patch_processor } )</h3>
+provider } )</h3>
 <p><b>Description :<br></b>binds to a
 specific “path” and define it's “scope” and controllers</p>
 <p><b>Attributes :</b></p>
@@ -268,14 +268,18 @@ specific “path” and define it's “scope” and controllers</p>
 			<p>2: “user” : a user specific, so
 			each user has it's own data shared between clients connected as
 			this user</p>
-			<p>3: array or object : only users
-			having one of listed capabilities can access</p>
-			<p>3.1 : [ ] : an array of capabilities
-			names this will apply for both read and write access</p>
-			<p>3.2 : { read : [ ], write : [ ] } :
-			dividing who can read from who can write</p>
-			<p>4 : “session” : client specific
-			scope</p>
+			<p>3: Object : an Object of capabilities
+			names each capability contain one of these values
+			<p/>
+			<ul>
+				<li>1 : Read only access</li>
+				<li>2 : Write only access</li>
+				<li>3 : Read/Write access</li>
+			</ul>
+			<p>
+				Example : { "articles": 1, "sales": 3 }<br>
+				This user have read only access to articles and full access to sales
+			</p>
 		</td>
 	</tr>
 	<tr valign="top">
@@ -294,23 +298,6 @@ specific “path” and define it's “scope” and controllers</p>
 			<p>When a client needs to read this
 			path's data, this function will be called provided with the
 			client's session and params expecting to callback with data</p>
-		</td>
-	</tr>
-	<tr valign="top">
-		<td width="20%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>patch_processor</p>
-		</td>
-		<td width="17%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>function</p>
-		</td>
-		<td width="12%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>no</p>
-		</td>
-		<td width="51%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0.04in">
-			<p>patch_processor( patch )</p>
-			<p>When
-			client updated the data this function will be called with the
-			patch from client (patch follows <a href="http://tools.ietf.org/html/rfc6902">rfc6902</a>)</p>
 		</td>
 	</tr>
 </table>
@@ -540,7 +527,7 @@ user login system</p>
 </table>
 <p><br>
 </p>
-<h3>query ( { url, callback
+<h3>on_query ( { url, callback
 } )</h3>
 <p style="page-break-before: always"><b>Description
 :<br></b>Wait for client query at specified “url” and call the
