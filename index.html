@@ -149,13 +149,17 @@ connected and it's not recommended to store sessions in the RAM ) :</p>
 	<span style="color: #cccccc">scope</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;public&quot;</span><span style="color: #cccccc">,</span>
 	<span style="color: #cccccc">provider</span><span style="color: #3399cc">:</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(callback)</span> <span style="color: #cccccc">{</span>
 		<span style="color: #cccccc">callback(test);</span>
-	<span style="color: #cccccc">},</span>
-	<span style="color: #cccccc">patch_processor</span><span style="color: #3399cc">:</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(patch)</span> <span style="color: #cccccc">{</span>
-		<span style="color: #cccccc">test</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">patch.value;</span>
-		<span style="color: #cccccc">console.log(</span><span style="color: #cd0000">&quot;patch received&quot;</span><span style="color: #cccccc">);</span>
-		<span style="color: #cccccc">console.log(patch);</span>
 	<span style="color: #cccccc">}</span>
 <span style="color: #cccccc">});</span>
+<span style="color: #cccccc">iosync.watch({</span>
+	<span style="color: #cccccc">path</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">&quot;/test&quot;</span><span style="color: #cccccc">,</span>
+	<span style="color: #cccccc">provider</span><span style="color: #3399cc">:</span> <span style="color: #00cd00">function</span> <span style="color: #cccccc">(path, value, session)</span> <span style="color: #cccccc">{</span>
+		<span style="color: #cccccc">test</span> <span style="color: #3399cc">=</span> <span style="color: #cccccc">value;</span>
+		<span style="color: #cccccc">console.log(</span><span style="color: #cd0000">&quot;patch received&quot;</span><span style="color: #cccccc">);</span>
+		<span style="color: #cccccc">console.log(value);</span>
+	<span style="color: #cccccc">}</span>
+<span style="color: #cccccc">});</span>
+
 </pre></div>
 <p>Client-side :</p>
 <p>HTML ( /public/index.html ) :</p>
@@ -361,11 +365,11 @@ patch to binded clients as specified “client”</p>
 </table>
 <p><br>
 </p>
-<h3>watch ( { paths, bind,
+<h3>watch ( { path,
 callback } )</h3>
 <p><b>Description :<br></b>Watch for
-patches that applies on specified “paths” and call “callback”
-function when there is clients binded to one of “bind”</p>
+specific path and it's sub branches then call “callback”
+function</p>
 <p><b>Attributes :</b></p>
 <table width="100%" cellpadding="4" cellspacing="0">
 	<col width="50*">
@@ -388,37 +392,16 @@ function when there is clients binded to one of “bind”</p>
 	</tr>
 	<tr valign="top">
 		<td width="20%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>paths</p>
+			<p>path</p>
 		</td>
 		<td width="17%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>array</p>
+			<p>String</p>
 		</td>
 		<td width="12%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>no</p>
+			<p>yes</p>
 		</td>
 		<td width="51%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0.04in">
-			<p>Array of paths to watch for changes</p>
-			<p>if it's undefined so it means watch
-			for all paths</p>
-		</td>
-	</tr>
-	<tr valign="top">
-		<td width="20%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>bind</p>
-		</td>
-		<td width="17%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>array</p>
-		</td>
-		<td width="12%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0in">
-			<p>no</p>
-		</td>
-		<td width="51%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0.04in">
-			<p>Array of paths strings</p>
-			<p>The callback will be called only if
-			there is at least one client binded to any of paths defined in
-			this property.</p>
-			<p>if it's undefined so it means call
-			callback on any patch on specified paths</p>
+			<p>path to watch for changes</p>
 		</td>
 	</tr>
 	<tr valign="top">
@@ -432,12 +415,9 @@ function when there is clients binded to one of “bind”</p>
 			<p>yes</p>
 		</td>
 		<td width="51%" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000; padding-top: 0in; padding-bottom: 0.04in; padding-left: 0.04in; padding-right: 0.04in">
-			<p>callback ( patch )</p>
+			<p>callback ( path, value, session )</p>
 			<p>The function to call when patch
-			applied on any of specified paths and “bind” condition is
-			satisfied</p>
-			<p>patch : an <a href="http://tools.ietf.org/html/rfc6902">rfc6902</a>
-			contains applied patch</p>
+			applied</p>
 		</td>
 	</tr>
 </table>
