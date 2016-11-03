@@ -9,6 +9,10 @@ var iosync = function(url){
   jsonpatch.observe(_data, function (patch) {
 		var clean_indexes = [];
     for (var p in patch) if (patch.hasOwnProperty(p)) {
+
+      // ignore angular modifications
+      if(patch[p].path.indexOf("$$hashKey") !==-1) continue;
+
       // searcing for the patch in _ignore array
       var ign_index = 0;
       var found = 0;
