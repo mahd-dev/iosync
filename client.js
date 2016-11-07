@@ -1,26 +1,22 @@
-var iosync = function(url){
+let iosync = (url) => {
 
 	"use strict";
-	var _socket = io.connect(url || "ws://" + location.host);
-	var _data = {};
-	var _ignore = [];
-	var _observers = [];
+	let _socket = io.connect(url || "ws://" + location.host);
+	let _data = {};
+	let _ignore = [];
+	let _observers = [];
 
-	window.iosyncdebug = {
-		_ignore: _ignore
-	}
+	jsonpatch.observe(_data, (patch) => {
 
-	jsonpatch.observe(_data, function (patch) {
-
-		var clean_indexes = [];
-		for (var p in patch) if (patch.hasOwnProperty(p)) {
+		let clean_indexes = [];
+		for (let p in patch) if (patch.hasOwnProperty(p)) {
 
 			// ignore angular modifications
 			if(patch[p].path.indexOf("$$hashKey") !==-1) continue;
 
 			// searcing for the patch in _ignore array
-			var ign_index = 0;
-			var found = 0;
+			let ign_index = 0;
+			let found = 0;
 			while (ign_index < _ignore.length){
 				if(_ignore[ign_index] && patch[p].path.indexOf(_ignore[ign_index].path)==0){
 					found=1;
@@ -31,96 +27,108 @@ var iosync = function(url){
 			if(!found){ // patch not found in _ignore array
 				_socket.emit("patch", [patch[p]]);
 				trigger_observers([patch[p]], "client");
-			}else{
-				trigger_observers([patch[p]], "server");
 			}
 		}
 		_ignore.splice(0, _ignore.length);
 
 	});
 
-	_socket.on('patch', function (patch) {
+	_socket.on('patch', (patch) => {
 		apply_patch(patch, "server");
+		for(let p of patch) trigger_observers([p], "server");
 	});
 
 	return{
-		bind: function (options) {
-			var opt = options || {};
-			var path = opt.path;
-			var params = opt.params;
-			var observer = opt.observer;
+		bind: (options) => {
+			let opt = options || {};
+			let path = opt.path;
+			let params = opt.params;
+			let observer = opt.observer;
 
 			if(typeof observer === "function") _observers.push({ // observer is optional, because we provide "reference binding"
 				path: path, // what it will observe
 				observer: observer // callback function
 			});
-			var v = xPath_get(path);
+			let v = xPath_get(path);
 			if(v){
-				setTimeout(function () { observer(v, []); }, 0);
+				setTimeout(() => { observer(v, []); }, 0);
 				return v;
 			}else{
-				var add = [{op:"add", path: path, value: {}}];
+				let add = [];
+				let exploded_path = path.split("/").filter(e=>!!e);
+				let cp = "";
+				for(let p of exploded_path ){
+					cp += "/" + p;
+					add.push({op:"add", path: cp, value: {}});
+				}
 				apply_patch(add, "server");
-				_socket.emit("bind", {path: path, params: params}, function (patch) { // notify server to provide us lastest value, and upcoming updates
+				_socket.emit("bind", {path: path, params: params}, (patch) => { // notify server to provide us lastest value, and upcoming updates
 					if(patch) {
 						apply_patch(patch, "server");
+						for(let p of patch) trigger_observers([p], "server");
 					}
 				});
 				return xPath_get(path);
 			}
 
 		},
-		unbind: function (options) {
-			var opt = options || {};
-			var path = opt.path || "/";
+		unbind: (options) => {
+			let opt = options || {};
+			let path = opt.path || "/";
 
-			_socket.emit("unbind", path); // notify server to stop sending us updates about that var
-			apply_patch([{"op": "remove", "path": path}], "server");
-			var i = 0;
+			_socket.emit("unbind", path); // notify server to stop sending us updates about that let
+			let patch = [{"op": "remove", "path": path}];
+			apply_patch(patch, "server");
+			for(let p of patch) trigger_observers([p], "server");
+			let i = 0;
 			while (i<_observers.length){
 				if(_observers[i].path==path) _observers.splice(i, 1);
 				else i++;
 			}
 		},
-		patch: function (options) {
-			var opt = options || {};
-			var patch = opt.patch;
+		patch: (options) => {
+			let opt = options || {};
+			let patch = opt.patch;
 
 			apply_patch(patch, "client");
+			for(let p of patch) trigger_observers([p], "client");
 		},
-		apply_params: function (options) {
-			var opt = options || {};
-			var path = opt.path;
-			var params = opt.params;
+		apply_params: (options) => {
+			let opt = options || {};
+			let path = opt.path;
+			let params = opt.params;
 
-			_socket.emit("apply_params", {path: path, params: params}, function (patch) {
-				if(patch) apply_patch(patch, "server");
+			_socket.emit("apply_params", {path: path, params: params}, (patch) => {
+				if(patch) {
+					apply_patch(patch, "server");
+					for(let p of patch) trigger_observers([p], "server");
+				}
 			});
 		},
-		login: function (options) {
-			var opt = options || {};
-			var params = opt.params;
-			var callback = opt.callback;
+		login: (options) => {
+			let opt = options || {};
+			let params = opt.params;
+			let callback = opt.callback;
 
 			_socket.emit('login', params, callback);
 		},
-		logout: function (options) {
-			var opt = options || {};
-			var callback = opt.callback;
+		logout: (options) => {
+			let opt = options || {};
+			let callback = opt.callback;
 
 			_socket.emit('logout', '', callback);
 		},
-		check_login: function (options) {
-			var opt = options || {};
-			var callback = opt.callback;
+		check_login: (options) => {
+			let opt = options || {};
+			let callback = opt.callback;
 
 			_socket.emit('check', "login", callback);
 		},
-		query: function (options) {
-			var opt = options || {};
-			var url = opt.url;
-			var params = opt.params;
-			var callback = opt.callback;
+		query: (options) => {
+			let opt = options || {};
+			let url = opt.url;
+			let params = opt.params;
+			let callback = opt.callback;
 
 			_socket.emit('query', {url: url, params: params}, callback);
 		},
@@ -128,9 +136,9 @@ var iosync = function(url){
 	};
 
 	function trigger_observers(patch, source) {
-		for (var o in _observers) if (_observers.hasOwnProperty(o)) {
-			var patches = [];
-			for (var p in patch) {
+		for (let o in _observers) if (_observers.hasOwnProperty(o)) {
+			let patches = [];
+			for (let p in patch) {
 				if (patch.hasOwnProperty(p) && ((patch[p].path && patch[p].path.indexOf(_observers[o].path))===0 || (patch[p].op=="move" && patch[p].from.indexOf(_observers[o].path)===0))) { // check if observer is watching this path
 					if(patch[p].path) patch[p].path = patch[p].path.slice(0, _observers[o].path.length);
 					if(patch[p].from) patch[p].from = patch[p].from.slice(0, _observers[o].path.length);
@@ -143,9 +151,9 @@ var iosync = function(url){
 	}
 
 	function xPath_get(path) {
-		var keys = path.split("/");
-		var val=_data;
-		for (var k in keys) {
+		let keys = path.split("/");
+		let val=_data;
+		for (let k in keys) {
 			if(keys.hasOwnProperty(k) && keys[k]!==""){ // escape empty keys
 				if(val.hasOwnProperty(keys[k])) val=val[keys[k]]; // okay, jump to that key
 				else return undefined; // oups, key does not exists
@@ -155,13 +163,13 @@ var iosync = function(url){
 	}
 	
 	function apply_patch(patch, source) { // we use this to keep reference binding working
-		var val;
-		var new_patch = [];
-		for (var p in patch) {
+		let val;
+		let new_patch = [];
+		for (let p in patch) {
 			if (patch.hasOwnProperty(p)) {
 				val = xPath_get(patch[p].path);
 				if(patch[p].op == "replace" && val instanceof Object && patch[p].value instanceof Object){
-					for (var r in val) {
+					for (let r in val) {
 						if (val.hasOwnProperty(r)) {
 							new_patch.push({
 								op:"remove",
@@ -169,7 +177,7 @@ var iosync = function(url){
 							});
 						}
 					}
-					for (var a in patch[p].value) {
+					for (let a in patch[p].value) {
 						if (patch[p].value.hasOwnProperty(a)) {
 							new_patch.push({
 								op:"add",
