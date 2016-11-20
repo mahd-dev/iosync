@@ -59,7 +59,7 @@ let iosync = (url) => {
 				let cp = ""
 				for(let p of exploded_path ){
 					cp += "/" + p
-					add.push({op:"add", path: cp, value: {}})
+					if(!xPath_get(cp)) add.push({op:"add", path: cp, value: {}})
 				}
 				apply_patch(add, "server")
 				_socket.emit("bind", {path: path, params: params}, (patch) => { // notify server to provide us lastest value, and upcoming updates
