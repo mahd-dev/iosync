@@ -1,6 +1,6 @@
 {
   "name": "iosync",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Nodejs module that synchronizes data in real-time between server and different connected clients, it includes “data binding”, “scopes”, “session and login”, “query”, “redirect”, “middlewares”, etc...",
   "main": "index.js",
   "dependencies": {
