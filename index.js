@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-const socket = require('./lib/socket.js');
-const server = require('./lib/server.js');
+const socket = require('./lib/socket.js')
+const server = require('./lib/server.js')
 
-module.exports = (opt) => {
+module.exports = function* (opt) {
 	
-	let io = socket.init(opt);
-	socket.listen(io);
+	let io = socket.init(opt)
+	socket.listen(io)
 	
-	return server;
+	return server
 
-};
+}
