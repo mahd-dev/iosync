@@ -1,7 +1,8 @@
-let iosync = (url) => {
+let iosync = (opt) => {
 
 	"use strict"
-	let _socket = io.connect(url || "ws://" + location.host)
+	if(!opt) opt={}
+	let _socket = opt.socket_io || io.connect(opt.url || "ws://" + location.host)
 	let _data = {}
 	let _ignore = []
 	let _observers = []
